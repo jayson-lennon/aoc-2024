@@ -1,3 +1,5 @@
+use crate::AocSolver;
+
 fn split_lists(data: &str) -> (Vec<u32>, Vec<u32>) {
     let (a, b): (Vec<_>, Vec<_>) = data
         .lines()
@@ -24,10 +26,33 @@ fn similarity(a: Vec<u32>, b: Vec<u32>) -> usize {
     similarity
 }
 
+pub struct Day1Solver;
+
+impl AocSolver for Day1Solver {
+    type Output = u32;
+
+    fn part_1(input: &str) -> Self::Output {
+        let (mut a, mut b) = split_lists(input);
+        a.sort();
+        b.sort();
+
+        total_dist(a, b)
+    }
+
+    fn part_2(input: &str) -> Self::Output {
+        let (a, b) = split_lists(input);
+
+        similarity(a, b) as u32
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
-    use crate::day01::{similarity, total_dist};
+    use crate::{
+        day01::{similarity, total_dist},
+        AocSolver, Day1Solver,
+    };
 
     const SAMPLE: &str = r#"3   4
 4   3
@@ -57,15 +82,9 @@ mod tests {
 
     #[test]
     fn answer_part_1() {
-        let data = include_str!("../data/day01.txt");
-        let (mut a, mut b) = super::split_lists(data);
-        a.sort();
-        b.sort();
+        let answer = Day1Solver::part_1(SAMPLE);
 
-        let answer = total_dist(a, b);
-
-        dbg!(answer);
-        // panic!();
+        assert_eq!(answer, 11);
     }
 
     #[test]
@@ -77,12 +96,7 @@ mod tests {
 
     #[test]
     fn answer_part_2() {
-        let data = include_str!("../data/day01.txt");
-        let (a, b) = super::split_lists(data);
-
-        let answer = similarity(a, b);
-
-        dbg!(answer);
-        // panic!();
+        let answer = Day1Solver::part_2(SAMPLE);
+        assert_eq!(answer, 31);
     }
 }
