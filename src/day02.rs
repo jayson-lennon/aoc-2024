@@ -43,7 +43,7 @@ fn trend_rule(levels: &Levels) -> bool {
     };
 
     // check the remaining entries
-    for window in levels.windows(2) {
+    for window in levels.windows(2).skip(1) {
         let [a, b] = window else { unimplemented!() };
         match trend {
             ReportLevelTrend::Increasing => {
