@@ -1,5 +1,9 @@
 use std::cmp::Ordering;
 
+use parser::parse_reports;
+
+use crate::AocSolver;
+
 type Reports = Vec<Vec<u32>>;
 type RawLevels<'a> = Vec<&'a str>;
 
@@ -97,22 +101,40 @@ fn expand_for_dampening(levels: &Levels) -> Vec<Levels> {
     vec![levels.clone()].into_iter().chain(dampened).collect()
 }
 
-/// Calculates the total number of safe reports (part2 solution)
-fn safe_count_part2(reports: Reports) -> usize {
-    reports
-        .iter()
-        .filter(|levels| {
-            let dampened_levels = expand_for_dampening(levels);
-            safe_count_part1(dampened_levels) > 0
-        })
-        .count()
+pub struct Day2Solver;
+
+impl AocSolver for Day2Solver {
+    type Output = usize;
+
+    fn part_1(input: &str) -> Self::Output {
+        let reports = parse_reports(input);
+        let trend_mask = reports.iter().map(trend_rule);
+        let tolerance_mask = reports.iter().map(tolerance_rule);
+
+        trend_mask
+            .zip(tolerance_mask)
+            .filter(|(a, b)| *a && *b)
+            .count()
+    }
+
+    fn part_2(input: &str) -> Self::Output {
+        let reports = parse_reports(input);
+        reports
+            .iter()
+            .filter(|levels| {
+                let dampened_levels = expand_for_dampening(levels);
+                safe_count_part1(dampened_levels) > 0
+            })
+            .count()
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::day02::{
-        parser::parse_reports, safe_count_part1, safe_count_part2, tolerance_rule, trend_rule,
+    use crate::{
+        day02::{parser::parse_reports, tolerance_rule, trend_rule, Day2Solver},
+        AocSolver,
     };
 
     use super::expand_for_dampening;
@@ -163,22 +185,9 @@ mod tests {
     }
 
     #[test]
-    fn solve_part_1_example() {
-        let reports = parse_reports(SAMPLE);
-
-        let safe_count = safe_count_part1(reports);
-
-        assert_eq!(safe_count, 2);
-    }
-
-    #[test]
     fn solve_part_1() {
-        let reports = parse_reports(include_str!("../data/day02.txt"));
-
-        let safe_count = safe_count_part1(reports);
-
-        dbg!(safe_count);
-        // panic!();
+        let answer = Day2Solver::part_1(SAMPLE);
+        assert_eq!(answer, 2);
     }
 
     #[test]
@@ -201,21 +210,8 @@ mod tests {
     }
 
     #[test]
-    fn solve_part_2_example() {
-        let reports = parse_reports(SAMPLE);
-
-        let safe_count = safe_count_part2(reports);
-
-        assert_eq!(safe_count, 4);
-    }
-
-    #[test]
     fn solve_part_2() {
-        let reports = parse_reports(include_str!("../data/day02.txt"));
-
-        let safe_count = safe_count_part2(reports);
-
-        dbg!(safe_count);
-        // panic!();
+        let answer = Day2Solver::part_2(SAMPLE);
+        assert_eq!(answer, 4);
     }
 }
