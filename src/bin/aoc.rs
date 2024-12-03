@@ -43,6 +43,9 @@ fn start(day: u8, data: String) -> Result<()> {
         2 => {
             run::<Day2Solver, _>(&data)?.pipe(print_solution);
         }
+        3 => {
+            run::<Day3Solver, _>(&data)?.pipe(print_solution);
+        }
         _ => eprintln!("solution for day {day} not found"),
     }
 
