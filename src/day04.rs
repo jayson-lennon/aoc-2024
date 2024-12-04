@@ -56,7 +56,8 @@ impl Grid {
         self.inner[0].len()
     }
 
-    fn find<D, I>(&self, n_chars: usize, direction: D, at: I) -> Vec<char>
+    /// Returns a sequence of characters up to `n_chars` in length at the given index.
+    fn find_sequence<D, I>(&self, n_chars: usize, direction: D, at: I) -> Vec<char>
     where
         D: Into<Direction>,
         I: Into<GridIndex>,
@@ -165,8 +166,17 @@ impl From<&str> for Grid {
     }
 }
 
-/// Direction to search
-struct Direction(isize, isize);
+type Row = isize;
+type Col = isize;
+
+/// Direction to search.
+///
+/// Values should be 0, 1, or -1.
+///
+/// - 1 goes up(row) or right(col)
+/// - 0 doesn't change
+/// - -1 goes down(row) or left(col)
+struct Direction(Row, Col);
 
 impl Direction {
     fn row_mod(&self) -> isize {
@@ -188,6 +198,8 @@ pub struct Day4Solver;
 impl AocSolver for Day4Solver {
     type Output = u32;
 
+    // Strategy: Iterate over each character until we find an `X` or `S`. Once found, perform a
+    // search in all directions for `XMAS`.
     fn part_1(input: &str) -> Self::Output {
         let grid = Grid::from(input);
 
@@ -195,7 +207,8 @@ impl AocSolver for Day4Solver {
         for (ch, idx) in grid.iter() {
             if ch == 'X' || ch == 'S' {
                 for direction in DIRECTIONS {
-                    if let ['X', 'M', 'A', 'S'] = grid.find(4, *direction, idx).as_slice() {
+                    if let ['X', 'M', 'A', 'S'] = grid.find_sequence(4, *direction, idx).as_slice()
+                    {
                         match_count += 1;
                     }
                 }
@@ -205,6 +218,9 @@ impl AocSolver for Day4Solver {
     }
 
     #[rustfmt::skip]
+    // Strategy: Iterate over each character until we find an `M` or `S`. Once found, copy out a
+    // block from the grid large enough to contain an X-MAS and then match on all possible
+    // permutations.
     fn part_2(input: &str) -> Self::Output {
         let grid = Grid::from(input);
         let mut match_count = 0;
@@ -243,7 +259,7 @@ impl AocSolver for Day4Solver {
 mod tests {
     use super::*;
 
-    const SAMPLE_PART_1: &str = r#"MMMSXXMASM
+    const SAMPLE: &str = r#"MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM
 MSAMASMSMX
@@ -256,7 +272,7 @@ MXMXAXMASX"#;
 
     #[test]
     fn parses_into_2d_grid() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
         assert_eq!(grid.rows(), 10);
         assert_eq!(grid.cols(), 10);
@@ -264,7 +280,7 @@ MXMXAXMASX"#;
 
     #[test]
     fn grid_indexed_access() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
         assert_eq!(grid[(0, 0)], 'M');
         assert_eq!(grid[(9, 9)], 'X');
@@ -272,31 +288,31 @@ MXMXAXMASX"#;
 
     #[test]
     fn finds_sequence_given_a_direction() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find(4, Direction(0, 1), (0, 4));
+        let sequence = grid.find_sequence(4, Direction(0, 1), (0, 4));
         assert_eq!(sequence, &['X', 'X', 'M', 'A']);
     }
 
     #[test]
     fn finds_sequence_given_a_negative_direction() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find(4, Direction(-1, 0), (2, 0));
+        let sequence = grid.find_sequence(4, Direction(-1, 0), (2, 0));
         assert_eq!(sequence, &['A', 'M', 'M']);
     }
 
     #[test]
     fn find_sequence_at_edge_of_grid() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find(4, Direction(0, 1), (0, 8));
+        let sequence = grid.find_sequence(4, Direction(0, 1), (0, 8));
         assert_eq!(sequence, &['S', 'M']);
     }
 
     #[test]
     fn grid_iters_through_chars() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
         let mut xmas_iter = grid.iter();
 
@@ -320,8 +336,8 @@ MXMXAXMASX"#;
 
     #[test]
     #[rustfmt::skip]
-    fn gets_x_max_block() {
-        let grid = Grid::from(SAMPLE_PART_1);
+    fn copy_block_out_of_grid() {
+        let grid = Grid::from(SAMPLE);
 
         let block = grid.get_block((0, 1));
 
@@ -333,7 +349,7 @@ MXMXAXMASX"#;
 
     #[test]
     fn returns_empty_block_when_it_goes_off_the_grid() {
-        let grid = Grid::from(SAMPLE_PART_1);
+        let grid = Grid::from(SAMPLE);
 
         let expected: Vec<char> = Vec::default();
 
@@ -346,13 +362,13 @@ MXMXAXMASX"#;
 
     #[test]
     fn solve_part_1() {
-        let answer = Day4Solver::part_1(SAMPLE_PART_1);
+        let answer = Day4Solver::part_1(SAMPLE);
         assert_eq!(answer, 18);
     }
 
     #[test]
     fn solve_part_2() {
-        let answer = Day4Solver::part_2(SAMPLE_PART_1);
+        let answer = Day4Solver::part_2(SAMPLE);
         assert_eq!(answer, 9);
     }
 }
