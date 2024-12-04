@@ -67,6 +67,7 @@ fn trend_rule(levels: &Levels) -> bool {
 }
 
 /// Returns `true` when two adjacent levels are within the tolerance range of 1 to 3.
+#[allow(clippy::manual_range_contains)]
 fn tolerance_rule(levels: &Levels) -> bool {
     for window in levels.windows(2) {
         let [a, b] = window else { unimplemented!() };
