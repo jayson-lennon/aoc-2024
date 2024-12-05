@@ -89,6 +89,7 @@ dependencies = [
  "color-eyre",
  "criterion",
  "paste",
+ "rayon",
  "regex",
  "tap",
  "thiserror",
