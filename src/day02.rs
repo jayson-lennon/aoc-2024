@@ -9,6 +9,34 @@ type RawLevels<'a> = Vec<&'a str>;
 
 type Levels = Vec<u32>;
 
+pub struct Day2Solver;
+
+impl AocSolver for Day2Solver {
+    type Output = usize;
+
+    fn part_1(input: &str) -> Self::Output {
+        let reports = parse_reports(input);
+        let trend_mask = reports.iter().map(trend_rule);
+        let tolerance_mask = reports.iter().map(tolerance_rule);
+
+        trend_mask
+            .zip(tolerance_mask)
+            .filter(|(a, b)| *a && *b)
+            .count()
+    }
+
+    fn part_2(input: &str) -> Self::Output {
+        let reports = parse_reports(input);
+        reports
+            .iter()
+            .filter(|levels| {
+                let dampened_levels = expand_for_dampening(levels);
+                safe_count_part1(dampened_levels) > 0
+            })
+            .count()
+    }
+}
+
 mod parser {
     use super::{Levels, RawLevels, Reports};
 
@@ -100,34 +128,6 @@ fn expand_for_dampening(levels: &Levels) -> Vec<Levels> {
     });
 
     vec![levels.clone()].into_iter().chain(dampened).collect()
-}
-
-pub struct Day2Solver;
-
-impl AocSolver for Day2Solver {
-    type Output = usize;
-
-    fn part_1(input: &str) -> Self::Output {
-        let reports = parse_reports(input);
-        let trend_mask = reports.iter().map(trend_rule);
-        let tolerance_mask = reports.iter().map(tolerance_rule);
-
-        trend_mask
-            .zip(tolerance_mask)
-            .filter(|(a, b)| *a && *b)
-            .count()
-    }
-
-    fn part_2(input: &str) -> Self::Output {
-        let reports = parse_reports(input);
-        reports
-            .iter()
-            .filter(|levels| {
-                let dampened_levels = expand_for_dampening(levels);
-                safe_count_part1(dampened_levels) > 0
-            })
-            .count()
-    }
 }
 
 #[cfg(test)]

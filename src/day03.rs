@@ -3,6 +3,45 @@ use regex::Regex;
 
 type Operand = u32;
 
+pub struct Day3Solver;
+impl AocSolver for Day3Solver {
+    type Output = u32;
+
+    fn part_1(input: &str) -> Self::Output {
+        let operands = find_valid_mul_operands(input);
+        operands.into_iter().map(|(lhs, rhs)| lhs * rhs).sum()
+    }
+
+    fn part_2(input: &str) -> Self::Output {
+        let mut stack = find_valid_mul_operands_with_indices(input)
+            .into_iter()
+            .map(|(index, (a, b))| StackItem::Mul(index, (a, b)))
+            .chain(find_do_indices(input).into_iter().map(StackItem::Do))
+            .chain(find_dont_indices(input).into_iter().map(StackItem::Dont))
+            .collect::<Vec<_>>();
+        stack.sort();
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        enum State {
+            Do,
+            Dont,
+        }
+
+        let mut current_state = State::Do;
+        let mut total = 0;
+        for item in stack {
+            match (current_state, item) {
+                (State::Do, StackItem::Mul(_, (a, b))) => total += a * b,
+                (State::Do, StackItem::Dont(_)) => current_state = State::Dont,
+                (_, StackItem::Do(_)) => current_state = State::Do,
+                _ => (),
+            }
+        }
+
+        total
+    }
+}
+
 fn find_valid_mul_operands(input: &str) -> Vec<(Operand, Operand)> {
     let re = Regex::new(r"mul\((?<first>\d*),(?<second>\d*)\)").unwrap();
     re.captures_iter(input)
@@ -51,8 +90,6 @@ fn find_dont_indices(input: &str) -> Vec<Index> {
     re.find_iter(input).map(|mat| mat.start()).collect()
 }
 
-pub struct Day3Solver;
-
 #[derive(Debug, Clone, Copy)]
 enum StackItem {
     Do(Index),
@@ -96,44 +133,6 @@ impl Ord for StackItem {
 impl PartialOrd for StackItem {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
-    }
-}
-
-impl AocSolver for Day3Solver {
-    type Output = u32;
-
-    fn part_1(input: &str) -> Self::Output {
-        let operands = find_valid_mul_operands(input);
-        operands.into_iter().map(|(lhs, rhs)| lhs * rhs).sum()
-    }
-
-    fn part_2(input: &str) -> Self::Output {
-        let mut stack = find_valid_mul_operands_with_indices(input)
-            .into_iter()
-            .map(|(index, (a, b))| StackItem::Mul(index, (a, b)))
-            .chain(find_do_indices(input).into_iter().map(StackItem::Do))
-            .chain(find_dont_indices(input).into_iter().map(StackItem::Dont))
-            .collect::<Vec<_>>();
-        stack.sort();
-
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-        enum State {
-            Do,
-            Dont,
-        }
-
-        let mut current_state = State::Do;
-        let mut total = 0;
-        for item in stack {
-            match (current_state, item) {
-                (State::Do, StackItem::Mul(_, (a, b))) => total += a * b,
-                (State::Do, StackItem::Dont(_)) => current_state = State::Dont,
-                (_, StackItem::Do(_)) => current_state = State::Do,
-                _ => (),
-            }
-        }
-
-        total
     }
 }
 

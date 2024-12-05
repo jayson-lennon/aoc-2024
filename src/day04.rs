@@ -2,6 +2,68 @@ use std::ops::Index;
 
 use crate::AocSolver;
 
+pub struct Day4Solver;
+
+impl AocSolver for Day4Solver {
+    type Output = u32;
+
+    // Strategy: Iterate over each character until we find an `X` or `S`. Once found, perform a
+    // search in all directions for `XMAS`.
+    fn part_1(input: &str) -> Self::Output {
+        let grid = Grid::from(input);
+
+        let mut match_count = 0;
+        for (ch, idx) in grid.iter() {
+            if ch == 'X' || ch == 'S' {
+                for direction in DIRECTIONS {
+                    if let ['X', 'M', 'A', 'S'] = grid.find_sequence(4, *direction, idx).as_slice()
+                    {
+                        match_count += 1;
+                    }
+                }
+            }
+        }
+        match_count
+    }
+
+    #[rustfmt::skip]
+    // Strategy: Iterate over each character until we find an `M` or `S`. Once found, copy out a
+    // block from the grid large enough to contain an X-MAS and then match on all possible
+    // permutations.
+    fn part_2(input: &str) -> Self::Output {
+        let grid = Grid::from(input);
+        let mut match_count = 0;
+        for (ch, idx) in grid.iter() {
+            if ch == 'M' || ch == 'S' {
+                match grid
+                    .get_block(idx)
+                    .as_slice()
+                {
+                    [
+                        'M', _ ,'S',
+                         _ ,'A', _,
+                        'M', _, 'S',
+                    ] | [
+                        'S', _, 'S',
+                         _, 'A', _,
+                        'M', _, 'M',
+                    ] | [
+                        'S', _, 'M',
+                         _, 'A', _,
+                        'S', _, 'M',
+                    ] | [
+                        'M', _, 'M',
+                         _, 'A', _,
+                        'S', _, 'S',
+                    ] => match_count += 1,
+                    _ => (),
+                }
+            }
+        }
+        match_count
+    }
+}
+
 /// Search directions
 const DIRECTIONS: &[(isize, isize)] = &[
     (1, 0),   // N
@@ -183,68 +245,6 @@ impl Direction {
 impl From<(isize, isize)> for Direction {
     fn from((row, col): (isize, isize)) -> Self {
         Direction(row, col)
-    }
-}
-
-pub struct Day4Solver;
-
-impl AocSolver for Day4Solver {
-    type Output = u32;
-
-    // Strategy: Iterate over each character until we find an `X` or `S`. Once found, perform a
-    // search in all directions for `XMAS`.
-    fn part_1(input: &str) -> Self::Output {
-        let grid = Grid::from(input);
-
-        let mut match_count = 0;
-        for (ch, idx) in grid.iter() {
-            if ch == 'X' || ch == 'S' {
-                for direction in DIRECTIONS {
-                    if let ['X', 'M', 'A', 'S'] = grid.find_sequence(4, *direction, idx).as_slice()
-                    {
-                        match_count += 1;
-                    }
-                }
-            }
-        }
-        match_count
-    }
-
-    #[rustfmt::skip]
-    // Strategy: Iterate over each character until we find an `M` or `S`. Once found, copy out a
-    // block from the grid large enough to contain an X-MAS and then match on all possible
-    // permutations.
-    fn part_2(input: &str) -> Self::Output {
-        let grid = Grid::from(input);
-        let mut match_count = 0;
-        for (ch, idx) in grid.iter() {
-            if ch == 'M' || ch == 'S' {
-                match grid
-                    .get_block(idx)
-                    .as_slice()
-                {
-                    [
-                        'M', _ ,'S',
-                         _ ,'A', _,
-                        'M', _, 'S',
-                    ] | [
-                        'S', _, 'S',
-                         _, 'A', _,
-                        'M', _, 'M',
-                    ] | [
-                        'S', _, 'M',
-                         _, 'A', _,
-                        'S', _, 'M',
-                    ] | [
-                        'M', _, 'M',
-                         _, 'A', _,
-                        'S', _, 'S',
-                    ] => match_count += 1,
-                    _ => (),
-                }
-            }
-        }
-        match_count
     }
 }
 

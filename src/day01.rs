@@ -1,5 +1,25 @@
 use crate::AocSolver;
 
+pub struct Day1Solver;
+
+impl AocSolver for Day1Solver {
+    type Output = u32;
+
+    fn part_1(input: &str) -> Self::Output {
+        let (mut a, mut b) = split_lists(input);
+        a.sort();
+        b.sort();
+
+        total_dist(a, b)
+    }
+
+    fn part_2(input: &str) -> Self::Output {
+        let (a, b) = split_lists(input);
+
+        similarity(a, b) as u32
+    }
+}
+
 fn split_lists(data: &str) -> (Vec<u32>, Vec<u32>) {
     let (a, b): (Vec<_>, Vec<_>) = data
         .lines()
@@ -24,26 +44,6 @@ fn similarity(a: Vec<u32>, b: Vec<u32>) -> usize {
         similarity += n as usize * total_matches;
     }
     similarity
-}
-
-pub struct Day1Solver;
-
-impl AocSolver for Day1Solver {
-    type Output = u32;
-
-    fn part_1(input: &str) -> Self::Output {
-        let (mut a, mut b) = split_lists(input);
-        a.sort();
-        b.sort();
-
-        total_dist(a, b)
-    }
-
-    fn part_2(input: &str) -> Self::Output {
-        let (a, b) = split_lists(input);
-
-        similarity(a, b) as u32
-    }
 }
 
 #[cfg(test)]
