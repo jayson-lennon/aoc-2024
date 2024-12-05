@@ -1,10 +1,3 @@
-// algo: predefined pattern searcher
-// 1. turn input into 2d array
-// 2. define all possible patterns (horizontal, vertical, diagnoal)
-// 3. search array for `X`
-// 4. perform search for single pattern
-// 5. repeat (3 & 4) for each possible pattern
-
 use std::ops::Index;
 
 use crate::AocSolver;
