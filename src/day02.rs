@@ -9,9 +9,9 @@ type RawLevels<'a> = Vec<&'a str>;
 
 type Levels = Vec<u32>;
 
-pub struct Day2Solver;
+pub struct Day02Solver;
 
-impl AocSolver for Day2Solver {
+impl AocSolver for Day02Solver {
     type Output = usize;
 
     fn part_1(input: &str) -> Self::Output {
@@ -134,7 +134,7 @@ fn expand_for_dampening(levels: &Levels) -> Vec<Levels> {
 mod tests {
 
     use crate::{
-        day02::{parser::parse_reports, tolerance_rule, trend_rule, Day2Solver},
+        day02::{parser::parse_reports, tolerance_rule, trend_rule, Day02Solver},
         AocSolver,
     };
 
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn solve_part_1() {
-        let answer = Day2Solver::part_1(SAMPLE);
+        let answer = Day02Solver::part_1(SAMPLE);
         assert_eq!(answer, 2);
     }
 
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn solve_part_2() {
-        let answer = Day2Solver::part_2(SAMPLE);
+        let answer = Day02Solver::part_2(SAMPLE);
         assert_eq!(answer, 4);
     }
 }

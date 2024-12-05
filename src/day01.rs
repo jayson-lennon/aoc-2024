@@ -1,8 +1,8 @@
 use crate::AocSolver;
 
-pub struct Day1Solver;
+pub struct Day01Solver;
 
-impl AocSolver for Day1Solver {
+impl AocSolver for Day01Solver {
     type Output = u32;
 
     fn part_1(input: &str) -> Self::Output {
@@ -51,7 +51,7 @@ mod tests {
 
     use crate::{
         day01::{similarity, total_dist},
-        AocSolver, Day1Solver,
+        AocSolver, Day01Solver,
     };
 
     const SAMPLE: &str = r#"3   4
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn answer_part_1() {
-        let answer = Day1Solver::part_1(SAMPLE);
+        let answer = Day01Solver::part_1(SAMPLE);
 
         assert_eq!(answer, 11);
     }
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn answer_part_2() {
-        let answer = Day1Solver::part_2(SAMPLE);
+        let answer = Day01Solver::part_2(SAMPLE);
         assert_eq!(answer, 31);
     }
 }

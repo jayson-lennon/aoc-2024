@@ -2,12 +2,12 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use crate::AocSolver;
 
-pub struct Day5Solver;
+pub struct Day05Solver;
 
 // Strategy: Implement PartialEq, Eq, PartialOrd, and Ord using the page ordering rules.
 // Then use std sort.
 
-impl AocSolver for Day5Solver {
+impl AocSolver for Day05Solver {
     type Output = u32;
 
     fn part_1(input: &str) -> Self::Output {
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn solves_part_1() {
-        let answer = Day5Solver::part_1(SAMPLE);
+        let answer = Day05Solver::part_1(SAMPLE);
 
         assert_eq!(answer, 143);
     }
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn solves_part_2() {
-        let answer = Day5Solver::part_2(SAMPLE);
+        let answer = Day05Solver::part_2(SAMPLE);
         assert_eq!(answer, 123);
     }
 }

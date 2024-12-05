@@ -3,8 +3,8 @@ use regex::Regex;
 
 type Operand = u32;
 
-pub struct Day3Solver;
-impl AocSolver for Day3Solver {
+pub struct Day03Solver;
+impl AocSolver for Day03Solver {
     type Output = u32;
 
     fn part_1(input: &str) -> Self::Output {
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn solves_part_1() {
-        let solution = Day3Solver::part_1(SAMPLE_PART_1);
+        let solution = Day03Solver::part_1(SAMPLE_PART_1);
 
         assert_eq!(solution, 161)
     }
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn solves_part_2() {
-        let solution = Day3Solver::part_2(SAMPLE_PART_2);
+        let solution = Day03Solver::part_2(SAMPLE_PART_2);
         assert_eq!(solution, 48)
     }
 }

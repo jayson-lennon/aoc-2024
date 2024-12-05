@@ -1,0 +1,14 @@
+day01 part 1            time:   [64.661 µs]
+day01 part 2            time:   [115.59 µs]
+
+day02 part 1            time:   [217.80 µs]
+day02 part 2            time:   [495.33 µs]
+
+day03 part 1            time:   [262.28 µs]
+day03 part 2            time:   [287.53 µs]
+
+day04 part 1            time:   [1.5429 ms]
+day04 part 2            time:   [1.2708 ms]
+
+day05 part 1            time:   [241.29 µs]
+day05 part 2            time:   [423.15 µs]

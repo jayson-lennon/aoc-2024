@@ -38,19 +38,19 @@ fn start(day: u8, data: String) -> Result<()> {
 
     match day {
         1 => {
-            run::<Day1Solver, _>(&data)?.pipe(print_solution);
+            run::<Day01Solver, _>(&data)?.pipe(print_solution);
         }
         2 => {
-            run::<Day2Solver, _>(&data)?.pipe(print_solution);
+            run::<Day02Solver, _>(&data)?.pipe(print_solution);
         }
         3 => {
-            run::<Day3Solver, _>(&data)?.pipe(print_solution);
+            run::<Day03Solver, _>(&data)?.pipe(print_solution);
         }
         4 => {
-            run::<Day4Solver, _>(&data)?.pipe(print_solution);
+            run::<Day04Solver, _>(&data)?.pipe(print_solution);
         }
         5 => {
-            run::<Day5Solver, _>(&data)?.pipe(print_solution);
+            run::<Day05Solver, _>(&data)?.pipe(print_solution);
         }
         _ => eprintln!("solution for day {day} not found"),
     }

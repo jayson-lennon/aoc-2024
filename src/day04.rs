@@ -2,9 +2,9 @@ use std::ops::Index;
 
 use crate::AocSolver;
 
-pub struct Day4Solver;
+pub struct Day04Solver;
 
-impl AocSolver for Day4Solver {
+impl AocSolver for Day04Solver {
     type Output = u32;
 
     // Strategy: Iterate over each character until we find an `X` or `S`. Once found, perform a
@@ -355,13 +355,13 @@ MXMXAXMASX"#;
 
     #[test]
     fn solve_part_1() {
-        let answer = Day4Solver::part_1(SAMPLE);
+        let answer = Day04Solver::part_1(SAMPLE);
         assert_eq!(answer, 18);
     }
 
     #[test]
     fn solve_part_2() {
-        let answer = Day4Solver::part_2(SAMPLE);
+        let answer = Day04Solver::part_2(SAMPLE);
         assert_eq!(answer, 9);
     }
 }
