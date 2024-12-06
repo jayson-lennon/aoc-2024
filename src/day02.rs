@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 
-use parser::parse_reports;
-
 use crate::AocSolver;
+use parser::parse_reports;
+use rayon::prelude::*;
 
 type Reports = Vec<Vec<u32>>;
 type RawLevels<'a> = Vec<&'a str>;
@@ -28,7 +28,7 @@ impl AocSolver for Day02Solver {
     fn part_2(input: &str) -> Self::Output {
         let reports = parse_reports(input);
         reports
-            .iter()
+            .par_iter()
             .filter(|levels| {
                 let dampened_levels = expand_for_dampening(levels);
                 safe_count_part1(dampened_levels) > 0
