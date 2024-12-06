@@ -6,3 +6,7 @@ bench DAY:
 
 watch DAY="":
   watchexec --clear --debounce 200ms cargo nextest run {{DAY}}
+
+pgo DAY="":
+  cargo pgo bench {{DAY}}
+  cargo pgo optimize bench {{DAY}}
