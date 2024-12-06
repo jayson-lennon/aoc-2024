@@ -1,4 +1,5 @@
 use crate::AocSolver;
+use rayon::prelude::*;
 use regex::Regex;
 
 type Operand = u32;
@@ -81,13 +82,11 @@ fn find_valid_mul_operands_with_indices(input: &str) -> Vec<(Index, (Operand, Op
 }
 
 fn find_do_indices(input: &str) -> Vec<Index> {
-    let re = Regex::new(r"do\(\)").unwrap();
-    re.find_iter(input).map(|mat| mat.start()).collect()
+    input.find("do()").iter().cloned().collect::<Vec<_>>()
 }
 
 fn find_dont_indices(input: &str) -> Vec<Index> {
-    let re = Regex::new(r"don't\(\)").unwrap();
-    re.find_iter(input).map(|mat| mat.start()).collect()
+    input.find("don't()").iter().cloned().collect::<Vec<_>>()
 }
 
 #[derive(Debug, Clone, Copy)]
