@@ -1,8 +1,11 @@
+use aoc_2024::{AocSolver, Day01Solver, Day02Solver, Day03Solver, Day04Solver, Day05Solver};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use mimalloc::MiMalloc;
 use paste::paste;
 use std::path::{Path, PathBuf};
 
-use aoc_2024::{AocSolver, Day01Solver, Day02Solver, Day03Solver, Day04Solver, Day05Solver};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 fn load_data_file<P: AsRef<Path>>(path: P) -> String {
     std::fs::read_to_string(path).unwrap()

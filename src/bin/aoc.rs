@@ -4,6 +4,11 @@ use color_eyre::eyre::Result;
 use std::path::PathBuf;
 use tap::Pipe;
 
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 /// Advent of Code 2024 runner
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
