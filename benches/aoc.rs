@@ -3,6 +3,10 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use paste::paste;
 use std::path::{Path, PathBuf};
 
+use mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 fn load_data_file<P: AsRef<Path>>(path: P) -> String {
     std::fs::read_to_string(path).unwrap()
 }

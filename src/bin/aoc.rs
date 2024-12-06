@@ -5,6 +5,10 @@ use paste::paste;
 use std::path::PathBuf;
 use tap::Pipe;
 
+use mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 macro_rules! pick_solver {
     ($select:expr, $data:expr, $($day:literal),* $(,)?) => {
         paste! {
