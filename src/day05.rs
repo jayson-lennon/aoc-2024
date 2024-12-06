@@ -1,6 +1,11 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::{
+    cmp::Ordering,
+    collections::HashMap,
+    sync::atomic::{self, AtomicU32},
+};
 
 use crate::AocSolver;
+use rayon::prelude::*;
 
 pub struct Day05Solver;
 
@@ -11,16 +16,15 @@ impl AocSolver for Day05Solver {
     type Output = u32;
 
     fn part_1(input: &str) -> Self::Output {
-        let manual = SafetyManual::from(input);
+        let mut manual = SafetyManual::from(input);
         let updates = manual.iter_updates(Sorted::Correctly);
 
         median(updates)
     }
 
     fn part_2(input: &str) -> Self::Output {
-        let manual = SafetyManual::from(input);
-        let updates = manual.iter_updates(Sorted::Incorrectly).map(|update| {
-            let mut update = update.clone();
+        let mut manual = SafetyManual::from(input);
+        let updates = manual.iter_updates(Sorted::Incorrectly).map(|mut update| {
             update.sort();
             update
         });
@@ -29,16 +33,16 @@ impl AocSolver for Day05Solver {
     }
 }
 
-fn median(updates: impl Iterator<Item = Vec<Page>>) -> u32 {
-    let mut sum: u32 = 0;
-    for update in updates {
+fn median(updates: impl ParallelIterator<Item = Vec<Page>>) -> u32 {
+    let sum = AtomicU32::new(0);
+    updates.for_each(|update| {
         let mid_index = update.len() / 2;
-        sum += update[mid_index].number as u32;
-    }
-    sum
+        sum.fetch_add(update[mid_index].number as u32, atomic::Ordering::Relaxed);
+    });
+    sum.load(atomic::Ordering::Relaxed)
 }
 
-type Rules = HashMap<u8, Page>;
+type Rules = HashMap<u8, Page, ahash::RandomState>;
 
 #[derive(Debug, Clone)]
 struct Page {
@@ -105,13 +109,14 @@ struct SafetyManual {
 
 impl SafetyManual {
     /// Returns an iterator over updates in `Page` format so they can be sorted later.
-    fn iter_updates(&self, sorted: Sorted) -> impl Iterator<Item = Vec<Page>> + '_ {
+    fn iter_updates(&mut self, sorted: Sorted) -> impl ParallelIterator<Item = Vec<Page>> + '_ {
         use Sorted::*;
-        self.updates.iter().filter_map(move |pages| {
+        let rules = self.rules.clone();
+        self.updates.par_iter().filter_map(move |pages| {
             let update = pages
                 .iter()
                 .map(|page| {
-                    self.rules
+                    rules
                         .get(page)
                         .cloned()
                         .unwrap_or_else(|| Page::empty(*page))
@@ -210,7 +215,7 @@ mod tests {
 
     #[test]
     fn get_correctly_ordered_updates() {
-        let manual = SafetyManual::from(SAMPLE);
+        let mut manual = SafetyManual::from(SAMPLE);
 
         let updates = manual
             .iter_updates(Sorted::Correctly)
@@ -237,7 +242,7 @@ mod tests {
 
     #[test]
     fn get_incorrectly_ordered_updates() {
-        let manual = SafetyManual::from(SAMPLE);
+        let mut manual = SafetyManual::from(SAMPLE);
 
         let updates = manual
             .iter_updates(Sorted::Incorrectly)
