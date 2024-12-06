@@ -1,8 +1,24 @@
 use aoc_2024::AocSolver;
 use clap::{command, Parser};
 use color_eyre::eyre::Result;
+use paste::paste;
 use std::path::PathBuf;
 use tap::Pipe;
+
+macro_rules! pick_solver {
+    ($select:expr, $data:expr, $($day:literal),* $(,)?) => {
+        paste! {
+        match $select {
+            $(
+                $day => {
+                    run::<[<Day $day Solver>], _>(&$data)?.pipe(print_solution);
+                }
+            )*
+        _ => eprintln!("solution not found"),
+        }
+        }
+    };
+}
 
 /// Advent of Code 2024 runner
 #[derive(Parser, Debug)]
@@ -33,30 +49,11 @@ fn main() -> Result<()> {
     start(args.day, data)
 }
 
+#[allow(clippy::zero_prefixed_literal)]
 fn start(day: u8, data: String) -> Result<()> {
     use aoc_2024::*;
 
-    match day {
-        1 => {
-            run::<Day01Solver, _>(&data)?.pipe(print_solution);
-        }
-        2 => {
-            run::<Day02Solver, _>(&data)?.pipe(print_solution);
-        }
-        3 => {
-            run::<Day03Solver, _>(&data)?.pipe(print_solution);
-        }
-        4 => {
-            run::<Day04Solver, _>(&data)?.pipe(print_solution);
-        }
-        5 => {
-            run::<Day05Solver, _>(&data)?.pipe(print_solution);
-        }
-        6 => {
-            run::<Day06Solver, _>(&data)?.pipe(print_solution);
-        }
-        _ => eprintln!("solution for day {day} not found"),
-    }
+    pick_solver!(day, data, 01, 02, 03, 04, 05, 06);
 
     Ok(())
 }
