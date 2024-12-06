@@ -1,5 +1,6 @@
 use crate::AocSolver;
 use rayon::prelude::*;
+use smallvec::SmallVec;
 use std::{
     ops::Index,
     sync::atomic::{AtomicU32, Ordering},
@@ -19,30 +20,19 @@ impl AocSolver for Day04Solver {
         grid.iter().for_each(|(ch, idx)| {
             if ch == 'X' || ch == 'S' {
                 for direction in DIRECTIONS {
-                    if let ['X', 'M', 'A', 'S'] = grid.find_sequence(4, *direction, idx).as_slice()
-                    {
+                    if let ['X', 'M', 'A', 'S'] = grid.find_sequence(*direction, idx).as_slice() {
                         match_count.fetch_add(1, Ordering::Relaxed);
                     }
                 }
             }
         });
-        // for (ch, idx) in grid.iter() {
-        //     if ch == 'X' || ch == 'S' {
-        //         for direction in DIRECTIONS {
-        //             if let ['X', 'M', 'A', 'S'] = grid.find_sequence(4, *direction, idx).as_slice()
-        //             {
-        //                 match_count += 1;
-        //             }
-        //         }
-        //     }
-        // }
         match_count.load(Ordering::Relaxed)
     }
 
-    #[rustfmt::skip]
     // Strategy: Iterate over each character until we find an `M` or `S`. Once found, copy out a
     // block from the grid large enough to contain an X-MAS and then match on all possible
     // permutations.
+    #[rustfmt::skip]
     fn part_2(input: &str) -> Self::Output {
         let grid = Grid::from(input);
         let match_count = AtomicU32::new(0);
@@ -125,8 +115,8 @@ impl Grid {
         self.inner[0].len()
     }
 
-    /// Returns a sequence of characters up to `n_chars` in length at the given index.
-    fn find_sequence<D, I>(&self, n_chars: usize, direction: D, at: I) -> Vec<char>
+    /// Returns a sequence of 4 characters length at the given index.
+    fn find_sequence<D, I>(&self, direction: D, at: I) -> SmallVec<[char; 4]>
     where
         D: Into<Direction>,
         I: Into<GridIndex>,
@@ -135,12 +125,12 @@ impl Grid {
         let mut at = at.into();
 
         // returned character sequence
-        let mut sequence = Vec::default();
+        let mut sequence = SmallVec::default();
 
         // start with the character at the provided index
         sequence.push(self.inner[at.row()][at.col()]);
 
-        for _ in 0..n_chars - 1 {
+        for _ in 0..3 {
             let next_row = {
                 let next = at.row() as isize + direction.row_mod();
                 // whenever we go < 0 that means we are off the grid, return the current sequence
@@ -191,19 +181,19 @@ impl Grid {
     }
 
     /// Returns a 2d box of characters sized for the X-MAS in part 2
-    fn get_block<I>(&self, at: I) -> Vec<char>
+    fn get_block<I>(&self, at: I) -> SmallVec<[char; 9]>
     where
         I: Into<GridIndex>,
     {
         let at = at.into();
         if at.row() > self.rows().saturating_sub(3) {
-            return Vec::default();
+            return SmallVec::default();
         }
         if at.col() > self.cols().saturating_sub(3) {
-            return Vec::default();
+            return SmallVec::default();
         }
 
-        let mut block = Vec::default();
+        let mut block = SmallVec::default();
         for i in 0..=2 {
             for j in 0..=2 {
                 block.push(self.inner[at.row() + i][at.col() + j]);
@@ -300,32 +290,33 @@ MXMXAXMASX"#;
     fn finds_sequence_given_a_direction() {
         let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find_sequence(4, Direction(0, 1), (0, 4));
-        assert_eq!(sequence, &['X', 'X', 'M', 'A']);
+        let sequence = grid.find_sequence(Direction(0, 1), (0, 4));
+        assert_eq!(sequence.as_ref(), &['X', 'X', 'M', 'A']);
     }
 
     #[test]
     fn finds_sequence_given_a_negative_direction() {
         let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find_sequence(4, Direction(-1, 0), (2, 0));
-        assert_eq!(sequence, &['A', 'M', 'M']);
+        let sequence = grid.find_sequence(Direction(-1, 0), (2, 0));
+        assert_eq!(sequence.as_ref(), &['A', 'M', 'M']);
     }
 
     #[test]
     fn find_sequence_at_edge_of_grid() {
         let grid = Grid::from(SAMPLE);
 
-        let sequence = grid.find_sequence(4, Direction(0, 1), (0, 8));
-        assert_eq!(sequence, &['S', 'M']);
+        let sequence = grid.find_sequence(Direction(0, 1), (0, 8));
+        assert_eq!(sequence.as_ref(), &['S', 'M']);
     }
 
     #[test]
     #[ignore = "incompatible with parallel implementation"]
+    #[allow(unused_variables)]
     fn grid_iters_through_chars() {
         let grid = Grid::from(SAMPLE);
 
-        let mut xmas_iter = grid.iter();
+        let xmas_iter = grid.iter();
 
         // assert_eq!(
         //     xmas_iter.next().unwrap(),
@@ -352,7 +343,7 @@ MXMXAXMASX"#;
 
         let block = grid.get_block((0, 1));
 
-        assert_eq!(block,
+        assert_eq!(block.as_ref(),
             &['M', 'M', 'S',
               'S', 'A', 'M',
               'M', 'X', 'S']);
@@ -365,10 +356,10 @@ MXMXAXMASX"#;
         let expected: Vec<char> = Vec::default();
 
         let block = grid.get_block((0, 8));
-        assert_eq!(block, expected);
+        assert_eq!(block.as_ref(), expected);
 
         let block = grid.get_block((8, 0));
-        assert_eq!(block, expected);
+        assert_eq!(block.as_ref(), expected);
     }
 
     #[test]

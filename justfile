@@ -3,3 +3,6 @@ long-bench DAY TIME:
 
 bench DAY:
   cargo bench --bench aoc -- {{DAY}}
+
+watch DAY="":
+  watchexec --clear --debounce 200ms cargo nextest run {{DAY}}
