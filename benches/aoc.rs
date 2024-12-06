@@ -4,8 +4,8 @@ use mimalloc::MiMalloc;
 use paste::paste;
 use std::path::{Path, PathBuf};
 
-#[global_allocator]
-static GLOBAL: MiMalloc = MiMalloc;
+// #[global_allocator]
+// static GLOBAL: MiMalloc = MiMalloc;
 
 fn load_data_file<P: AsRef<Path>>(path: P) -> String {
     std::fs::read_to_string(path).unwrap()
