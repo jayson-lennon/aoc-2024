@@ -1,4 +1,4 @@
-use aoc_2024::{AocSolver, Day01Solver, Day02Solver, Day03Solver, Day04Solver, Day05Solver};
+use aoc_2024::*;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use paste::paste;
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ macro_rules! aoc {
     };
 }
 
-aoc![01, 02, 03, 04, 05];
+aoc![01, 02, 03, 04, 05, 06];
 
-criterion_group!(benches, day01, day02, day03, day04, day05);
+criterion_group!(benches, day01, day02, day03, day04, day05, day06);
 criterion_main!(benches);
