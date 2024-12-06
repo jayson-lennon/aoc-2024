@@ -1,5 +1,4 @@
 use crate::AocSolver;
-use rayon::prelude::*;
 use regex::Regex;
 
 type Operand = u32;
