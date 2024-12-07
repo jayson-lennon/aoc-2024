@@ -22,10 +22,10 @@ fn load_data_file<P: AsRef<Path>>(path: P) -> String {
 //     });
 // }
 
-macro_rules! aoc {
+macro_rules! aoc_bench {
     ($($day:literal),* $(,)?) => {
+    paste! {
         $(
-            paste! {
             fn [<day $day>](c: &mut Criterion) {
                 let day_data =
                     load_data_file(PathBuf::from(concat!("data/day", stringify!($day), ".txt")));
@@ -36,12 +36,26 @@ macro_rules! aoc {
                     b.iter(|| [<Day $day Solver>]::part_2(black_box(&day_data)))
                 });
             }
-            }
         )*
+        criterion_group!(benches,
+            $(
+                [<day $day>],
+            )*
+        );
+    }
     };
 }
 
-aoc![01, 02, 03, 04, 05, 06];
+#[rustfmt::skip]
+aoc_bench![
+    01,
+    02,
+    03,
+    04,
+    05,
+    06,
+    07
+];
 
-criterion_group!(benches, day01, day02, day03, day04, day05, day06);
+// criterion_group!(benches, day01, day02, day03, day04, day05, day06);
 criterion_main!(benches);
