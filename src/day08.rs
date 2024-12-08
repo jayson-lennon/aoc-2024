@@ -1,4 +1,5 @@
-use ahash::{HashMap, HashSet};
+use fxhash::{FxHashMap, FxHashSet};
+use smallvec::SmallVec;
 use std::collections::hash_map;
 
 use crate::AocSolver;
@@ -13,7 +14,7 @@ impl AocSolver for Day08Solver {
 
         map.iter_antennas()
             .flat_map(|(_, antennas)| {
-                let mut antinodes = Vec::default();
+                let mut antinodes: SmallVec<[Pos; 12]> = SmallVec::default();
                 // check each antenna against all other antennas
                 for a in antennas {
                     for b in antennas {
@@ -25,9 +26,10 @@ impl AocSolver for Day08Solver {
                         }
                     }
                 }
+                assert!(!antinodes.spilled());
                 antinodes
             })
-            .collect::<HashSet<_>>()
+            .collect::<FxHashSet<_>>()
             .len() as u32
     }
 
@@ -36,7 +38,7 @@ impl AocSolver for Day08Solver {
 
         map.iter_antennas()
             .flat_map(|(_, antennas)| {
-                let mut antinodes = Vec::default();
+                let mut antinodes = Vec::with_capacity(112);
                 // check each antenna against all other antennas
                 for a in antennas {
                     for b in antennas {
@@ -63,14 +65,14 @@ impl AocSolver for Day08Solver {
                 }
                 antinodes
             })
-            .collect::<HashSet<_>>()
+            .collect::<FxHashSet<_>>()
             .len() as u32
     }
 }
 
 #[derive(Debug)]
 struct FrequencyMap {
-    antennas: HashMap<char, Vec<Pos>>,
+    antennas: FxHashMap<char, Vec<Pos>>,
     width: i8,
     height: i8,
 }
@@ -83,7 +85,7 @@ impl FrequencyMap {
 
 impl From<&str> for FrequencyMap {
     fn from(value: &str) -> Self {
-        let mut antennas = HashMap::default();
+        let mut antennas = FxHashMap::default();
         let (mut width, mut height) = (0, 0);
         for (row, line) in value.lines().enumerate() {
             for (col, ch) in line.chars().enumerate() {

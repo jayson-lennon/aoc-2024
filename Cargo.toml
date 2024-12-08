@@ -14,6 +14,7 @@ tap = "1.0.1"
 mimalloc = "0.1"
 color-eyre = "0.6.3"
 itertools = "0.13.0"
+fxhash = "0.2.1"
 
 [dev-dependencies]
 criterion = { version = "0.5" }

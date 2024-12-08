@@ -1,3 +1,5 @@
 /target
 data/
 bench-results.txt
+flamegraph.svg
+perf.*
