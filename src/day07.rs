@@ -1,6 +1,6 @@
-use std::ops::Index;
-
+use rayon::prelude::*;
 use smallvec::SmallVec;
+use std::ops::Index;
 
 use crate::AocSolver;
 
@@ -12,7 +12,8 @@ impl AocSolver for Day07Solver {
     fn part_1(input: &str) -> Self::Output {
         let equation_parts = EquationParts::from(input);
         equation_parts
-            .into_iter()
+            .parts
+            .par_iter()
             .filter_map(|part| {
                 if part.can_be_made_true(&[add, mul]) {
                     Some(part.answer)
@@ -27,13 +28,14 @@ impl AocSolver for Day07Solver {
         let equation_parts = EquationParts::from(input);
 
         let (part_1_true, need_concat): (Vec<_>, Vec<_>) = equation_parts
-            .into_iter()
+            .parts
+            .iter()
             .partition(|part| part.can_be_made_true(&[add, mul]));
 
         let part_1_sum = part_1_true.into_iter().map(|part| part.answer).sum::<u64>();
 
         let part_2_sum = need_concat
-            .into_iter()
+            .par_iter()
             .filter_map(|part| {
                 if part.can_be_made_true(&[add, mul, concat]) {
                     Some(part.answer)
@@ -47,7 +49,7 @@ impl AocSolver for Day07Solver {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct CalibrationEquation {
     answer: u64,
     operands: SmallVec<[u64; 12]>,
@@ -57,53 +59,34 @@ type MathOp = fn(u64, u64) -> u64;
 
 impl CalibrationEquation {
     fn can_be_made_true(&self, operations: &[MathOp]) -> bool {
-        let permutations = generate_permutations(operations, self.operands.len() - 1);
-        for operator_list in permutations {
-            // start with the first number
-            let mut current = self.operands[0];
+        self.can_be_made_true_impl(operations, &self.operands, 0, self.operands[0])
+    }
 
-            // apply the next operation to the next number
-            for (i, math_op) in operator_list.iter().enumerate() {
-                current = math_op(current, self.operands[i + 1]);
-            }
+    fn can_be_made_true_impl(
+        &self,
+        operations: &[MathOp],
+        operands: &[u64],
+        operand_index: usize,
+        current_result: u64,
+    ) -> bool {
+        // return the result once we've reached the end
+        if operand_index == operands.len() - 1 {
+            return current_result == self.answer;
+        }
 
-            // bail if we get an answer we want
-            if current == self.answer {
+        for &op in operations {
+            let next_result = op(current_result, operands[operand_index + 1]);
+
+            if self.can_be_made_true_impl(operations, operands, operand_index + 1, next_result) {
                 return true;
             }
         }
+
         false
     }
 }
 
-/// Generate all possible permutations of `items`. `length` determines the number of `items` to
-/// include.
-fn generate_permutations(items: &[MathOp], length: usize) -> Vec<Vec<MathOp>> {
-    let mut results = Vec::new();
-    let mut current = Vec::new();
-    gen_perm_recursive(items, length, &mut current, &mut results);
-    results
-}
-
-fn gen_perm_recursive(
-    items: &[MathOp],
-    length: usize,
-    current: &mut Vec<MathOp>,
-    all_permutations: &mut Vec<Vec<MathOp>>,
-) {
-    if current.len() == length {
-        all_permutations.push(current.clone());
-        return;
-    }
-
-    for &item in items {
-        current.push(item);
-        gen_perm_recursive(items, length, current, all_permutations);
-        current.pop();
-    }
-}
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct EquationParts {
     parts: Vec<CalibrationEquation>,
 }
@@ -113,24 +96,6 @@ impl Index<usize> for EquationParts {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.parts[index]
-    }
-}
-
-impl IntoIterator for EquationParts {
-    type Item = CalibrationEquation;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.parts.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a EquationParts {
-    type Item = &'a CalibrationEquation;
-    type IntoIter = std::slice::Iter<'a, CalibrationEquation>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.parts.iter()
     }
 }
 
