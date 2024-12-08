@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 fn start(day: u8, data: String) -> Result<()> {
     use aoc_2024::*;
 
-    pick_solver!(day, data, 01, 02, 03, 04, 05, 06, 07);
+    pick_solver!(day, data, 01, 02, 03, 04, 05, 06, 07, 08);
 
     Ok(())
 }
