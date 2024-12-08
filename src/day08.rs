@@ -1,6 +1,5 @@
 use fxhash::{FxHashMap, FxHashSet};
 use smallvec::SmallVec;
-use std::collections::hash_map;
 
 use crate::AocSolver;
 
@@ -78,7 +77,7 @@ struct FrequencyMap {
 }
 
 impl FrequencyMap {
-    pub fn iter_antennas(&self) -> hash_map::Iter<'_, char, Vec<Pos>> {
+    pub fn iter_antennas(&self) -> impl Iterator<Item = (&char, &Vec<Pos>)> {
         self.antennas.iter()
     }
 }
