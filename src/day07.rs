@@ -27,14 +27,14 @@ impl AocSolver for Day07Solver {
     fn part_2(input: &str) -> Self::Output {
         let equation_parts = EquationParts::from(input);
 
-        let (part_1_true, need_concat): (Vec<_>, Vec<_>) = equation_parts
+        let (part_1_true, check_part_2): (Vec<_>, Vec<_>) = equation_parts
             .parts
             .iter()
             .partition(|part| part.can_be_made_true(&[add, mul]));
 
         let part_1_sum = part_1_true.into_iter().map(|part| part.answer).sum::<u64>();
 
-        let part_2_sum = need_concat
+        let part_2_sum = check_part_2
             .par_iter()
             .filter_map(|part| {
                 if part.can_be_made_true(&[add, mul, concat]) {
@@ -52,10 +52,11 @@ impl AocSolver for Day07Solver {
 #[derive(Clone, Debug)]
 struct CalibrationEquation {
     answer: u64,
-    operands: SmallVec<[u64; 12]>,
+    operands: OperandVec,
 }
 
 type MathOp = fn(u64, u64) -> u64;
+type OperandVec = SmallVec<[u64; 12]>;
 
 impl CalibrationEquation {
     fn can_be_made_true(&self, operations: &[MathOp]) -> bool {
@@ -111,7 +112,8 @@ impl From<&str> for EquationParts {
                         .split(' ')
                         .filter(|ch| !ch.is_empty())
                         .map(|n| n.parse::<u64>().unwrap())
-                        .collect::<SmallVec<[u64; 12]>>();
+                        .collect::<OperandVec>();
+                    assert!(!operands.spilled());
                     CalibrationEquation { answer, operands }
                 })
                 .collect(),
