@@ -29,7 +29,7 @@ impl AocSolver for Day07Solver {
 
         let (part_1_true, check_part_2): (Vec<_>, Vec<_>) = equation_parts
             .parts
-            .iter()
+            .par_iter()
             .partition(|part| part.can_be_made_true(&[add, mul]));
 
         let part_1_sum = part_1_true.into_iter().map(|part| part.answer).sum::<u64>();

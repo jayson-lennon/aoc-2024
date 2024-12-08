@@ -21,5 +21,5 @@ day06 part 1     time:   [43.362 µs]
 day06 part 2     time:   [13.761 ms]
 
 day07 part 1     time:   [469.17 µs]
-day07 part 2     time:   [11.719 ms]
+day07 part 2     time:   [10.722 ms]
 ```
