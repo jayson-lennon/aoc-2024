@@ -55,7 +55,8 @@ aoc_bench![
     05,
     06,
     07,
-    08
+    08,
+    09,
 ];
 
 // criterion_group!(benches, day01, day02, day03, day04, day05, day06);
