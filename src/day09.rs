@@ -1,8 +1,5 @@
-use std::ops::Index;
-
-use derive_more::derive::From;
-
 use crate::AocSolver;
+use std::ops::Index;
 
 pub struct Day09Solver;
 
@@ -131,25 +128,11 @@ impl BlockStorage {
         let files = self.iter_files().collect::<Vec<_>>();
         for file in files {
             let mut free_space = self.iter_free_space();
-            // eprintln!(
-            //     "check file: {} size {}",
-            //     self.inner[file.index()],
-            //     file.size()
-            // );
             if let Some(space) = free_space.find(|space| file.size() <= space.size()) {
                 if space.index() >= file.index() {
                     continue;
                 }
-                // eprintln!("BEFORE SWAP: {self}");
-                // eprintln!(
-                //     "SWAPPPPP Space avail: {}, required: {}. swapping {:?} -> {:?}",
-                //     space.size(),
-                //     file.size(),
-                //     space,
-                //     file
-                // );
                 self.swap_chunk(space, file);
-                // eprintln!("AFTER SWAP: {self}");
             }
         }
     }
@@ -369,7 +352,6 @@ fn char_to_num(b: u8) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use color_eyre::owo_colors::OwoColorize;
 
     use super::*;
 
