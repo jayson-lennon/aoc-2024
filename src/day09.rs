@@ -1,5 +1,11 @@
 use crate::AocSolver;
-use std::ops::Index;
+use std::{
+    ops::Index,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
 
 pub struct Day09Solver;
 
@@ -110,9 +116,12 @@ impl BlockStorage {
         }
     }
 
-    fn iter_free_space(&self) -> FreeSpaceIterator {
+    #[inline(always)]
+    fn iter_free_space(&self, leftmost_index: Arc<AtomicUsize>) -> FreeSpaceIterator {
         FreeSpaceIterator {
-            current_index: 0,
+            reported_leftmost_index: false,
+            current_index: leftmost_index.load(Ordering::Relaxed),
+            leftmost_index,
             storage: self,
         }
     }
@@ -126,8 +135,9 @@ impl BlockStorage {
 
     fn defrag(&mut self) {
         let files = self.iter_files().collect::<Vec<_>>();
+        let leftmost_index = Arc::new(AtomicUsize::from(0));
         for file in files {
-            let mut free_space = self.iter_free_space();
+            let mut free_space = self.iter_free_space(Arc::clone(&leftmost_index));
             if let Some(space) = free_space.find(|space| file.size() <= space.size()) {
                 if space.index() >= file.index() {
                     continue;
@@ -137,6 +147,7 @@ impl BlockStorage {
         }
     }
 
+    #[inline(always)]
     fn swap_chunk<A, B>(&mut self, space: A, file: B)
     where
         A: BlockInfo,
@@ -147,6 +158,7 @@ impl BlockStorage {
         }
     }
 
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.inner.len()
     }
@@ -164,10 +176,12 @@ struct FreeSpaceEntry {
 }
 
 impl BlockInfo for FreeSpaceEntry {
+    #[inline(always)]
     fn index(&self) -> usize {
         self.at
     }
 
+    #[inline(always)]
     fn size(&self) -> usize {
         self.size
     }
@@ -176,12 +190,15 @@ impl BlockInfo for FreeSpaceEntry {
 #[derive(Debug)]
 struct FreeSpaceIterator<'a> {
     current_index: usize,
+    reported_leftmost_index: bool,
+    leftmost_index: Arc<AtomicUsize>,
     storage: &'a BlockStorage,
 }
 
 impl<'a> Iterator for FreeSpaceIterator<'a> {
     type Item = FreeSpaceEntry;
 
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         let mut i = self.current_index;
         if i == self.storage.len() - 1 {
@@ -196,6 +213,14 @@ impl<'a> Iterator for FreeSpaceIterator<'a> {
             }
         }
         let free_space_start = i;
+
+        // crappy optimization so we start on the next free space when the iterator is created
+        // again
+        if !self.reported_leftmost_index {
+            self.leftmost_index
+                .store(free_space_start, Ordering::Relaxed);
+            self.reported_leftmost_index = true;
+        }
 
         let mut size = 0;
         // track free blocks
@@ -222,10 +247,12 @@ struct FileEntry {
 }
 
 impl BlockInfo for FileEntry {
+    #[inline(always)]
     fn index(&self) -> usize {
         self.at
     }
 
+    #[inline(always)]
     fn size(&self) -> usize {
         self.size
     }
@@ -391,7 +418,7 @@ mod tests {
     fn iter_free_space() {
         let storage = BlockStorage::from(SAMPLE);
 
-        let mut free_space = storage.iter_free_space();
+        let mut free_space = storage.iter_free_space(Arc::new(AtomicUsize::from(0)));
 
         assert_eq!(free_space.next(), Some(FreeSpaceEntry { at: 2, size: 3 }));
         assert_eq!(free_space.next(), Some(FreeSpaceEntry { at: 8, size: 3 }));
