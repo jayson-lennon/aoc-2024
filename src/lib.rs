@@ -1,5 +1,8 @@
 #![warn(clippy::perf)]
 
+pub mod grid;
+pub mod util;
+
 use paste::paste;
 
 macro_rules! day_modules {
@@ -24,6 +27,7 @@ day_modules![
     07,
     08,
     09,
+    10,
 ];
 
 pub trait AocSolver {
