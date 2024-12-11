@@ -73,7 +73,7 @@ impl Query for FindAdjacentNumbersLargerByOne {
     }
 }
 
-/// Recurisve exploration entry point
+/// Recursive exploration entry point
 fn explore(rule: TrailheadRule, grid: &Grid2D, trailheads: &[(Pos2, char)]) -> Vec<(Pos2, u32)> {
     // Need to track the trailheads that we have already visited for part1
     let mut visited = FxHashSet::default();
@@ -103,7 +103,7 @@ fn explore_impl(
     let adjacent = grid.query(FindAdjacentNumbersLargerByOne, current);
 
     if adjacent.is_empty() {
-        // reached the summit
+        // reached the end of a trail
         match rule {
             TrailheadRule::UniqueSummits => {
                 if grid[current] == '9' && !visited.contains(&(trailhead, current)) {
