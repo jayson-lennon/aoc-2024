@@ -78,18 +78,10 @@ fn explore(rule: TrailheadRule, grid: &Grid2D, trailheads: &[(Pos2, char)]) -> V
     // Need to track the trailheads that we have already visited for part1
     let mut visited = FxHashSet::default();
 
-    let mut scores = Vec::default();
-
-    for trailhead in trailheads {
-        scores.push(explore_impl(
-            rule,
-            grid,
-            &mut visited,
-            trailhead.0,
-            trailhead.0,
-        ));
-    }
-    scores
+    trailheads
+        .iter()
+        .map(|(pos, _)| explore_impl(rule, grid, &mut visited, *pos, *pos))
+        .collect()
 }
 
 /// Recursively find trails
@@ -123,10 +115,10 @@ fn explore_impl(
         }
     }
 
-    let mut score = 0;
-    for pos in adjacent {
-        score += explore_impl(rule, grid, visited, trailhead, pos).1;
-    }
+    let score = adjacent
+        .iter()
+        .map(|pos| explore_impl(rule, grid, visited, trailhead, *pos).1)
+        .sum::<u32>();
 
     (trailhead, score)
 }

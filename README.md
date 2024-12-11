@@ -29,7 +29,7 @@ day08 part 2     time:   [36.028 µs]
 day09 part 1     time:   [575.50 µs]
 day09 part 2     time:   [63.570 ms]
 
-day10 part 1     time:   [164.33 µs]
-day10 part 2     time:   [144.60 µs]
+day10 part 1     time:   [152.09 µs]
+day10 part 2     time:   [133.84 µs]
 ```
 
