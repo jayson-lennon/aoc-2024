@@ -1,5 +1,5 @@
-use fxhash::FxHashMap;
-use smallvec::{smallvec, SmallVec};
+use cached::proc_macro::cached;
+use rules::{EvenDigits, Mul2024, Rule, ZeroToOne};
 
 use crate::AocSolver;
 
@@ -9,25 +9,12 @@ impl AocSolver for Day11Solver {
     type Output = u64;
 
     fn part_1(input: &str) -> Self::Output {
-        let stones = Stones::from(input).blink(25);
-        stones.len() as u64
+        Stones::from(input).blink(25)
     }
 
     fn part_2(input: &str) -> Self::Output {
-        let stones = Stones::from(input).blink(75);
-        stones.len() as u64
+        Stones::from(input).blink(75)
     }
-}
-
-fn split(n: u64, digits: u32) -> (u64, u64) {
-    let len = 10_u64.pow(digits / 2);
-    let a = n / len;
-    let b = n % len;
-    (a, b)
-}
-
-fn num_digits(n: u64) -> u32 {
-    n.ilog10() + 1
 }
 
 type Stone = u64;
@@ -37,50 +24,32 @@ struct Stones {
 }
 
 impl Stones {
-    #[inline(always)]
-    pub fn len(&self) -> usize {
-        self.inner.len()
+    fn blink(self, blinks: usize) -> u64 {
+        self.inner
+            .iter()
+            .map(|stone| blink_impl(*stone, blinks))
+            .sum()
+    }
+}
+
+#[cached]
+#[inline(always)]
+fn blink_impl(stone: Stone, blink_n: usize) -> u64 {
+    if blink_n == 0 {
+        return 1;
     }
 
-    fn blink(self, total_blinks: usize) -> Self {
-        let mut blinked = 0;
+    let mut stones = 0;
 
-        let mut next = self.inner.clone();
-        let mut result: Vec<Stone> = Vec::with_capacity(self.len() * 2);
-        let mut memo: FxHashMap<Stone, SmallVec<[Stone; 2]>> = FxHashMap::default();
-
-        while blinked < total_blinks {
-            for stone in &next {
-                if let Some(cache) = memo.get(stone) {
-                    for stone in cache {
-                        result.push(*stone);
-                    }
-                } else {
-                    if let Some(new_stone) = apply_rule(ZeroToOne, *stone) {
-                        memo.insert(*stone, new_stone.clone());
-                        result.push(new_stone[0]);
-                        continue;
-                    }
-                    if let Some(new_stones) = apply_rule(EvenDigits, *stone) {
-                        memo.insert(*stone, new_stones.clone());
-                        for stone in new_stones {
-                            result.push(stone);
-                        }
-                        continue;
-                    }
-                    if let Some(new_stone) = apply_rule(Mul2024, *stone) {
-                        memo.insert(*stone, new_stone.clone());
-                        result.push(new_stone[0]);
-                    }
-                }
-            }
-            blinked += 1;
-            next.clear();
-            next.append(&mut result);
-        }
-
-        Self { inner: next }
+    for stone in ZeroToOne
+        .execute(stone)
+        .or_else(|| EvenDigits.execute(stone))
+        .or_else(|| Mul2024.execute(stone))
+        .unwrap()
+    {
+        stones += blink_impl(stone, blink_n - 1);
     }
+    stones
 }
 
 impl From<&str> for Stones {
@@ -100,50 +69,95 @@ impl From<&str> for Stones {
     }
 }
 
-struct ZeroToOne;
+mod rules {
+    use smallvec::{smallvec, SmallVec};
 
-impl Rule for ZeroToOne {
-    fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
-        match stone {
-            0 => Some(smallvec![1]),
-            _ => None,
+    use super::Stone;
+    pub trait Rule {
+        fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>>;
+    }
+
+    pub struct ZeroToOne;
+
+    impl Rule for ZeroToOne {
+        #[inline(always)]
+        fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
+            match stone {
+                0 => Some(smallvec![1]),
+                _ => None,
+            }
         }
     }
-}
 
-struct EvenDigits;
+    pub struct EvenDigits;
 
-impl Rule for EvenDigits {
-    fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
-        let digits = num_digits(stone);
+    impl Rule for EvenDigits {
+        #[inline(always)]
+        fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
+            let digits = num_digits(stone);
 
-        // if even
-        if digits % 2 == 0 {
-            let (a, b) = split(stone, digits);
-            Some(smallvec![a, b])
-        } else {
-            None
+            // if even
+            if digits % 2 == 0 {
+                let (a, b) = split(stone, digits);
+                Some(smallvec![a, b])
+            } else {
+                None
+            }
         }
     }
-}
 
-struct Mul2024;
+    pub struct Mul2024;
 
-impl Rule for Mul2024 {
-    fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
-        Some(smallvec![stone * 2024])
+    impl Rule for Mul2024 {
+        #[inline(always)]
+        fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>> {
+            Some(smallvec![stone * 2024])
+        }
     }
-}
 
-trait Rule {
-    fn execute(&self, stone: Stone) -> Option<SmallVec<[Stone; 2]>>;
-}
+    /// Splits `n` in half (1234 -> 12 34).
+    fn split(n: u64, digits: u32) -> (u64, u64) {
+        let len = 10_u64.pow(digits / 2);
+        let a = n / len;
+        let b = n % len;
+        (a, b)
+    }
 
-fn apply_rule<R>(rule: R, stone: Stone) -> Option<SmallVec<[Stone; 2]>>
-where
-    R: Rule,
-{
-    rule.execute(stone)
+    /// Returns the number of digits in a number.
+    fn num_digits(n: u64) -> u32 {
+        n.ilog10() + 1
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn split_num() {
+            let (a, b) = split(123_456, 6);
+            assert_eq!(a, 123);
+            assert_eq!(b, 456);
+        }
+
+        #[test]
+        fn zero_to_one() {
+            let stone = ZeroToOne.execute(0);
+            assert_eq!(stone.unwrap()[0], 1);
+        }
+
+        #[test]
+        fn even_digits() {
+            let stone = EvenDigits.execute(1234);
+            let expected: SmallVec<[u64; 2]> = smallvec![12, 34];
+            assert_eq!(stone.unwrap(), expected);
+        }
+
+        #[test]
+        fn mul_2024() {
+            let stone = Mul2024.execute(5);
+            assert_eq!(stone.unwrap()[0], 10120);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -154,49 +168,23 @@ mod tests {
     const SAMPLE: &str = r#"125 17"#;
 
     #[test]
-    fn split_num() {
-        let (a, b) = split(123_456, 6);
-        assert_eq!(a, 123);
-        assert_eq!(b, 456);
-    }
-
-    #[test]
     fn parses() {
         let stones = Stones::from(SAMPLE);
-        assert_eq!(stones.len(), 2);
+        assert_eq!(stones.inner.len(), 2);
     }
 
     #[test]
     fn blinks() {
         let stones = Stones::from(SAMPLE);
         let next_blink = stones.blink(1);
-        assert_eq!(next_blink.inner, vec![253000, 1, 7]);
+        assert_eq!(next_blink, 3);
     }
 
     #[test]
     fn blinks_twice() {
         let stones = Stones::from(SAMPLE);
         let next_blink = stones.blink(2);
-        assert_eq!(next_blink.inner, vec![253, 0, 2024, 14168]);
-    }
-
-    #[test]
-    fn rule_zero_to_one() {
-        let stone = apply_rule(ZeroToOne, 0);
-        assert_eq!(stone.unwrap()[0], 1);
-    }
-
-    #[test]
-    fn rule_even_digits() {
-        let stone = apply_rule(EvenDigits, 1234);
-        let expected: SmallVec<[u64; 2]> = smallvec![12, 34];
-        assert_eq!(stone.unwrap(), expected);
-    }
-
-    #[test]
-    fn rule_mul_2024() {
-        let stone = apply_rule(Mul2024, 5);
-        assert_eq!(stone.unwrap()[0], 10120);
+        assert_eq!(next_blink, 4);
     }
 
     #[test]

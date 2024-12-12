@@ -16,6 +16,7 @@ color-eyre = "0.6.3"
 itertools = "0.13.0"
 fxhash = "0.2.1"
 derive_more = { version = "1.0.0", features = ["full"] }
+cached = { version = "0.54.0", features = ["ahash"] }
 
 [dev-dependencies]
 criterion = { version = "0.5" }
