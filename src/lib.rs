@@ -28,6 +28,7 @@ day_modules![
     08,
     09,
     10,
+    11,
 ];
 
 pub trait AocSolver {
