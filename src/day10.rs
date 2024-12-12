@@ -39,6 +39,7 @@ enum TrailheadRule {
 }
 
 /// Grid finder to locate all positions containing a '0'.
+#[derive(Clone)]
 struct Zeroes;
 
 impl Finder for Zeroes {
@@ -55,7 +56,7 @@ impl Query for FindAdjacentNumbersLargerByOne {
     type Output = SmallVec<[Pos2; 4]>;
 
     #[inline(always)]
-    fn query(&self, grid: &Grid2D, pos: Pos2) -> Self::Output {
+    fn query(&mut self, grid: &Grid2D, pos: Pos2) -> Self::Output {
         let mut adjacent = SmallVec::default();
         let current = grid[pos] as u8;
 
