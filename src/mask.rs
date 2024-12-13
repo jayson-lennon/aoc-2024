@@ -2,6 +2,7 @@ use std::ops::{Index, IndexMut};
 
 use crate::grid::Pos2;
 
+#[derive(Debug)]
 pub struct Mask2D {
     mask: Vec<Vec<u8>>,
     border: usize,
@@ -76,7 +77,9 @@ impl Index<Pos2> for Mask2D {
 
     fn index(&self, Pos2 { row, col }: Pos2) -> &Self::Output {
         let border = self.border;
-        &self.mask[row as usize + border][col as usize + border]
+        let row = row + border as isize;
+        let col = col + border as isize;
+        &self.mask[row as usize][col as usize]
     }
 }
 
@@ -137,5 +140,22 @@ mod tests {
 
         assert_eq!(mask.get((0, 1)), Some(1));
         assert_eq!(mask.get((0, 0)), Some(0));
+    }
+
+    #[test]
+    fn creates_mask_with_offset_element() {
+        let positions = pos(&[(1, 2), (3, 4)]);
+
+        let mask = Mask2D::from_positions(&positions, 0);
+
+        assert_eq!(
+            mask.mask,
+            vec![
+                vec![0, 0, 0, 0, 0],
+                vec![0, 0, 1, 0, 0],
+                vec![0, 0, 0, 0, 0],
+                vec![0, 0, 0, 0, 1],
+            ]
+        )
     }
 }
