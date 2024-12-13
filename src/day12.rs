@@ -48,7 +48,7 @@ impl AocSolver for Day12Solver {
     // 1. do part one up until the perimeter calculation
     // 2. create a mask from each plot
     // 3. compare each plant in the plot mask with a known pattern that identifies a corner
-    // 4. for each matched corner, increment the "unique sides" by 1
+    // 4. for each matched corner, increment the "sides count" by 1
     // 5. sum the results
     fn part_2(input: &str) -> Self::Output {
         let garden = Garden::from(input);
@@ -74,12 +74,10 @@ impl AocSolver for Day12Solver {
 fn find_sides(plot: &Plot, mask: Mask2D) -> u64 {
     let mut sides = 0;
     for plant in plot {
-        let mut this_sides = 0;
-        this_sides += Corner1.n_corners(*plant, &mask);
-        this_sides += Corner2.n_corners(*plant, &mask);
-        this_sides += Corner3.n_corners(*plant, &mask);
-        this_sides += Corner4.n_corners(*plant, &mask);
-        sides += this_sides;
+        sides += Corner1.n_corners(*plant, &mask); // 2
+        sides += Corner2.n_corners(*plant, &mask); // 3
+        sides += Corner3.n_corners(*plant, &mask); // 2
+        sides += Corner4.n_corners(*plant, &mask); // 3
     }
     sides
 }
@@ -102,13 +100,15 @@ impl CornerFinder for Corner1 {
 
         let (this, a, b, c) = extract_submask(mask, plant, coords);
 
+        // corner in top-right with no adjacent plants
         let pat1 = match (a, b, this, c) {
-            (0, 0,
+            (0, _,
              _, 0) => 1,
 
             _ => 0
         };
 
+        // corner in top-right with adjacent plants
         let pat2 = match (a, b, this, c) {
             (1, 0,
              _, 1) => 1,
@@ -129,12 +129,15 @@ impl CornerFinder for Corner2 {
 
         let (this, a, b, c) = extract_submask(mask, plant, coords);
 
+        // corner in top-left with no adjacent plants
         let pat1 = match (b, c, a, this) {
-            (0, 0,
+            (_, 0,
              0, _) => 1,
 
             _ => 0
         };
+
+        // corner in top-left with adjacent plants
         let pat2 = match (b, c, a, this) {
             (0, 1,
              1, _) => 1,
@@ -155,13 +158,15 @@ impl CornerFinder for Corner3 {
 
         let (this, a, b, c) = extract_submask(mask, plant, coords);
 
+        // corner in bottom-left with no adjacent plants
         let pat1 = match (c, this, b, a) {
             (0, _,
-             0, 0) => 1,
+             _, 0) => 1,
 
             _ => 0
         };
 
+        // corner in bottom-left with adjacent plants
         let pat2 = match (c, this, b, a) {
             (1, _,
              0, 1) => 1,
@@ -182,13 +187,15 @@ impl CornerFinder for Corner4 {
 
         let (this, a, b, c) = extract_submask(mask, plant, coords);
 
+        // corner in bottom-right with no adjacent plants
         let pat1 = match (this, a, c, b) {
             (_, 0,
-             0, 0) => 1,
+             0, _) => 1,
 
             _ => 0
         };
 
+        // corner in bottom-right with adjacent plants
         let pat2 = match (this, a, c, b) {
             (_, 1,
              1, 0) => 1,
@@ -433,6 +440,19 @@ MIIIIIJJEE
 MIIISIJEEE
 MMMISSJEEE"#;
 
+    const SAMPLE_3: &str = r#"EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE"#;
+
+    const SAMPLE_4: &str = r#"AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA"#;
+
     #[test]
     fn parses() {
         let garden = Garden::from(SAMPLE_1);
@@ -531,5 +551,11 @@ MMMISSJEEE"#;
 
         let answer = Day12Solver::part_2(SAMPLE_2);
         assert_eq!(answer, 1206);
+
+        let answer = Day12Solver::part_2(SAMPLE_3);
+        assert_eq!(answer, 236);
+
+        let answer = Day12Solver::part_2(SAMPLE_4);
+        assert_eq!(answer, 368);
     }
 }
