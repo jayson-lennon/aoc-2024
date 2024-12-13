@@ -1,9 +1,8 @@
 use fxhash::FxHashSet;
 use rayon::prelude::*;
-use smallvec::SmallVec;
 
 use crate::{
-    grid::{Direction, Finder, Grid2D, Pos2, Query},
+    grid::{Grid2D, Pos2, Query},
     AocSolver,
 };
 
@@ -31,7 +30,7 @@ impl AocSolver for Day12Solver {
             .sum()
     }
 
-    fn part_2(input: &str) -> Self::Output {
+    fn part_2(_: &str) -> Self::Output {
         0
     }
 }
