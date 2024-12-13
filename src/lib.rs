@@ -1,6 +1,7 @@
 #![warn(clippy::perf)]
 
 pub mod grid;
+pub mod mask;
 pub mod util;
 
 use paste::paste;

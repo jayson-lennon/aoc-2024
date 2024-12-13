@@ -1,11 +1,11 @@
+mod direction;
+mod position;
+
 use std::ops::Index;
 
 pub use direction::Direction;
 use fxhash::FxHashSet;
 pub use position::Pos2;
-
-mod direction;
-mod position;
 
 pub struct Dimensions2D {
     rows: usize,
@@ -13,10 +13,12 @@ pub struct Dimensions2D {
 }
 
 impl Dimensions2D {
+    #[inline(always)]
     pub fn rows(&self) -> usize {
         self.rows
     }
 
+    #[inline(always)]
     pub fn cols(&self) -> usize {
         self.cols
     }
