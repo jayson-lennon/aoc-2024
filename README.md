@@ -40,5 +40,8 @@ day12 part 2     time:   [5.3350 ms]
 
 day13 part 1     time:   [406.92 µs]
 day13 part 2     time:   [421.21 µs]
+
+day14 part 1     time:   [311.43 µs]
+day14 part 2     time:   [357.02 ms]
 ```
 
