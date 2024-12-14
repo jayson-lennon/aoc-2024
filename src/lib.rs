@@ -3,6 +3,7 @@
 pub mod grid;
 pub mod mask;
 pub mod util;
+pub mod wrap;
 
 use paste::paste;
 
@@ -32,6 +33,7 @@ day_modules![
     11,
     12,
     13,
+    14,
 ];
 
 pub trait AocSolver {
