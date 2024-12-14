@@ -11,7 +11,7 @@ macro_rules! day_modules {
     ($($day:literal),* $(,)?) => {
         paste! {
         $(
-            mod [<day $day>];
+            pub mod [<day $day>];
             pub use [<day $day>]::[<Day $day Solver>];
         )*
         }

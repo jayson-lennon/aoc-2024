@@ -1,7 +1,8 @@
-use fxhash::{FxHashMap, FxHashSet};
+use fxhash::FxHashMap;
 use regex::Regex;
+use thread_manager::ThreadManager;
 
-use crate::{grid::Grid2D, wrap::WrappingI64, AocSolver};
+use crate::{wrap::WrappingI64, AocSolver};
 
 pub struct Day14Solver;
 
@@ -24,25 +25,50 @@ impl AocSolver for Day14Solver {
             .product()
     }
 
-    fn part_2(input: &str) -> Self::Output {
-        0
-        // #[cfg(debug_assertions)]
-        // let dimensions = (7, 11);
-        //
-        // #[cfg(not(debug_assertions))]
-        // let dimensions = (103, 101);
-        //
-        // for i in 0..30000 {
-        //     let mut bots = SecurityTeam::new(input, dimensions);
-        //     bots.timeshift(i);
-        //
-        //     let factor = bots
-        //         .quadrants()
-        //         .into_iter()
-        //         .map(|quadrant| bots.in_quadrant(quadrant))
-        //         .product::<usize>();
-        //     safety.push(factor);
-        // }
+    // Strategy:
+    // Spawn some threads to check the map. Map is scanned by looking for contiguous entries of
+    // bots (the border). Once we find enough in a row, then we have the pattern.
+    fn part_2(_: &str) -> Self::Output {
+        let input = include_str!("../data/day14.txt");
+        const DIMENSIONS: (i64, i64) = (103, 101);
+        const MAX_PATTERN_ROW: usize = DIMENSIONS.0 as usize - 33;
+
+        let thread_manager =
+            ThreadManager::<()>::new(num_cpus::get().saturating_sub(1).clamp(1, usize::MAX));
+
+        let (tx, rx) = kanal::unbounded();
+
+        for i in 0..(DIMENSIONS.0 * DIMENSIONS.1) {
+            let tx = tx.clone();
+
+            thread_manager.execute(move || {
+                let mut bots = SecurityTeam::new(input, DIMENSIONS);
+                bots.timeshift(i);
+
+                let map = bots.make_lazy_2d_bot_map();
+                for (n_row, row) in map.iter().enumerate() {
+                    // patern is 33 units high, so if we get near the bottom then it won't fit
+                    // anymore. bail
+                    if n_row > MAX_PATTERN_ROW {
+                        break;
+                    }
+                    let mut contiguous = 0;
+                    for col in row {
+                        match col {
+                            1 => contiguous += 1,
+                            _ => contiguous = 0,
+                        }
+                        if contiguous > 8 {
+                            let _ = tx.send(i);
+                        }
+                    }
+                }
+            });
+        }
+        match rx.recv() {
+            Ok(seconds) => seconds as usize,
+            Err(_) => panic!("recv error"),
+        }
     }
 }
 
@@ -53,7 +79,7 @@ type BotPositions = FxHashMap<Pos, Total>;
 type BotMap2d = Vec<Vec<u8>>;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq)]
-struct Rect {
+pub struct Rect {
     top_left: Pos,
     bottom_right: Pos,
 }
@@ -74,7 +100,6 @@ impl From<(Pos, Pos)> for Rect {
         }
     }
 }
-
 #[derive(Debug)]
 struct Bot {
     pos: (Wi64, Wi64),
@@ -82,19 +107,21 @@ struct Bot {
 }
 
 impl Bot {
+    #[inline(always)]
     fn timeshift(&mut self, seconds: i64) {
         let velocity = (self.velocity.0 * seconds, self.velocity.1 * seconds);
         self.pos.0 += velocity.0;
         self.pos.1 += velocity.1;
     }
 
+    #[inline(always)]
     fn pos_as_i64(&self) -> (i64, i64) {
         (self.pos.0.as_i64(), self.pos.1.as_i64())
     }
 }
 
 #[derive(Debug)]
-struct SecurityTeam {
+pub struct SecurityTeam {
     inner: Vec<Bot>,
     rows: i64,
     cols: i64,
@@ -102,11 +129,12 @@ struct SecurityTeam {
 
 impl SecurityTeam {
     #[allow(dead_code)]
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.inner.len()
     }
 
-    fn new(input: &str, (rows, cols): (i64, i64)) -> Self {
+    pub fn new(input: &str, (rows, cols): (i64, i64)) -> Self {
         let re_bot = Regex::new(r#"p=(-?\d*),(-?\d*) v=(-?\d*),(-?\d*)"#).unwrap();
         SecurityTeam {
             inner: {
@@ -115,14 +143,13 @@ impl SecurityTeam {
                     .map(|line| {
                         let caps = re_bot.captures(line).unwrap();
                         let (_, [col, row, v_col, v_row]) = caps.extract();
-                        let bot = Bot {
+                        Bot {
                             pos: (
                                 Wi64::new(row.to_i64(), (0, rows - 1)),
                                 Wi64::new(col.to_i64(), (0, cols - 1)),
                             ),
                             velocity: (v_row.to_i64(), v_col.to_i64()),
-                        };
-                        bot
+                        }
                     })
                     .collect()
             },
@@ -131,14 +158,14 @@ impl SecurityTeam {
         }
     }
 
-    fn timeshift(&mut self, seconds: i64) {
+    pub fn timeshift(&mut self, seconds: i64) {
         self.inner.iter_mut().for_each(|bot| {
             bot.timeshift(seconds);
         });
     }
 
     /// Returns a hashmap that contains bot positions and the number per position
-    fn calculate_bot_map(&self) -> BotPositions {
+    fn calculate_bot_position_counts(&self) -> BotPositions {
         let mut bots: FxHashMap<(i64, i64), usize> = FxHashMap::default();
         for bot in self.inner.iter() {
             let entry = bots.entry(bot.pos_as_i64()).or_default();
@@ -153,16 +180,29 @@ impl SecurityTeam {
             .map(|_| vec![0; self.cols as usize])
             .collect::<Vec<_>>();
 
-        let map = self.calculate_bot_map();
+        let positions = self.calculate_bot_position_counts();
 
-        for ((row, col), total) in map {
+        for ((row, col), total) in positions {
             buf[row as usize][col as usize] = total as u8;
         }
         buf
     }
 
+    /// Create a 2d map where each filled position is a 1 and any unfilled position is a 0
+    fn make_lazy_2d_bot_map(&self) -> BotMap2d {
+        let mut buf = (0..self.rows as usize)
+            .map(|_| vec![0; self.cols as usize])
+            .collect::<Vec<_>>();
+
+        for bot in &self.inner {
+            let (row, col) = bot.pos_as_i64();
+            buf[row as usize][col as usize] = 1;
+        }
+        buf
+    }
+
     /// Returns the quadrants of the map
-    fn quadrants(&self) -> [Rect; 4] {
+    pub fn quadrants(&self) -> [Rect; 4] {
         let mid_col = self.cols / 2;
         let mid_row = self.rows / 2;
         [
@@ -189,29 +229,12 @@ impl SecurityTeam {
         ]
     }
 
-    fn in_quadrant(&self, quadrant: Rect) -> usize {
+    pub fn in_quadrant(&self, quadrant: Rect) -> usize {
         self.inner
             .iter()
             .filter(|bot| quadrant.contains(bot.pos_as_i64()))
             .count()
     }
-
-    // fn quadrants(&self, map: &mut BotMap2d) {
-    //     let mid_col = (self.cols / 2) as usize;
-    //     let mid_row = (self.rows / 2) as usize;
-    //
-    //     for (i, row) in map.iter_mut().enumerate() {
-    //         if i == mid_row {
-    //             for entry in row {
-    //                 *entry = 0;
-    //             }
-    //             continue;
-    //         }
-    //         row[mid_col] = 0;
-    //     }
-    //     dbg!(map);
-    //     panic!();
-    // }
 }
 
 impl std::fmt::Display for SecurityTeam {
@@ -265,15 +288,6 @@ p=9,5 v=-3,-3"#;
 00000100000
 00012000000
 01000010000
-"#;
-
-    const SAMPLE_100_QUADRANTS: &str = r#"00000 20010
-00000 00000
-10000 00000
-           
-00000 00000
-00012 00000
-01000 10000
 "#;
 
     #[test]

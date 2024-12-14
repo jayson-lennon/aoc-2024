@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Deref};
+use std::ops::{Add, AddAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub struct WrappingI64 {
